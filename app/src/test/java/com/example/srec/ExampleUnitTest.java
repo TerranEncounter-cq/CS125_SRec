@@ -2,6 +2,8 @@ package com.example.srec;
 
 import org.junit.Test;
 
+import java.lang.reflect.Method;
+
 import static org.junit.Assert.*;
 
 /**
@@ -13,5 +15,20 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
+    }
+    public void apiTest() {
+        Method api;
+        try {
+            api = Class.forName("com.example.srec.MainActivity.")
+                    .getMethod("sendApiRequest");
+        } catch (Exception e) {
+            test();
+            return;
+        }
+
+    }
+    public void test() {
+
+
     }
 }

@@ -2,6 +2,8 @@ package com.example.srec;
 
 import android.os.Bundle;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -12,6 +14,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.android.volley.toolbox.Volley;
 import com.android.volley.RequestQueue;
@@ -20,9 +23,13 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,33 +46,9 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        // Instantiate the RequestQueue, use volley to make a web request from the api used, here is
-        // the full contact api that uploading a email or a phone number will result in a response about
-        // the user of the email address(enrich api). The problem here is that the uploading msg should
-        // contain a header indicating the api key, still working how to override the getHeader() function
-        // in volley.
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.fullcontact.com/v3/person.enrich";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        //textView.setText("Response is: "+ response.substring(0,500));
-                        System.out.println(response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //textView.setText("That didn't work!");
-            }
-        });
-
-// Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        Button search = findViewById(R.id.search);
+        search.setOnClickListener(unused -> sendApiAuthorization());
+        sendApiAuthorization();
     }
 
     @Override
@@ -96,5 +79,44 @@ public class MainActivity extends AppCompatActivity {
             onCreate();
         });
     }*/
+    public void sendApiAuthorization () {
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="https://api.fullcontact.com/v3/person.enrich";
+        final TextView result = findViewById(R.id.result);
+        final TextView A = findViewById(R.id.A);
+        // Post information we've already have into the server.
 
+        StringRequest auth = new StringRequest(Request.Method.POST, url,
+                response -> {
+
+                    // Display the first 500 characters of the response string.
+                    try {
+                        JSONObject toSend = new JSONObject();
+                        toSend.put("email", "qic7@illinois.edu");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }, error -> {
+            A.setText(error.toString());
+            result.setText("error auth|");
+        }) {
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                final Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer WH9fcrNi3Octmj2QQA8rGU2FSXqbgWPk");
+                return headers;
+            }
+        };
+        StringRequest get = new StringRequest(Request.Method.GET, url,
+                response -> {
+                    // Display the first 500 characters of the response string.
+                    result.setText(response);
+                }, error -> {
+            A.setText(error.toString());
+            result.setText("error get|");
+        });
+
+// Add the request to the RequestQueue.
+        queue.add(auth);
+        queue.add(get);
+    }
 }
