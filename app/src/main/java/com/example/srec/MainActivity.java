@@ -1,5 +1,6 @@
 package com.example.srec;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.android.volley.AuthFailureError;
@@ -102,6 +103,17 @@ public class MainActivity extends AppCompatActivity {
                 headers.put("Authorization", "Bearer WH9fcrNi3Octmj2QQA8rGU2FSXqbgWPk");
                 return headers;
             }
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<>();
+                params.put("user",userAccount.getUsername());
+                params.put("pass",userAccount.getPassword());
+                params.put("comment", Uri.encode(comment));
+                params.put("comment_post_ID",String.valueOf(postId));
+                params.put("blogId",String.valueOf(blogId));
+
+                return params;
+            }
+
         };
 
 // Add the request to the RequestQueue.
