@@ -1,5 +1,6 @@
 package com.example.srec;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -27,24 +28,24 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+    /** four buttons of UI. */
     private Button record;
     private Button stop;
     private Button delete;
     private Button search;
 
+    /** MediaRecorder for recording. */
     private MediaRecorder mediaRecorder;
+
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 //        mediaRecorder = new MediaRecorder();
 //        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_2_TS);
 //        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -53,20 +54,42 @@ public class MainActivity extends AppCompatActivity {
 //        mediaRecorder.setAudioChannels(1);
 //        mediaRecorder.setAudioSamplingRate(44100);
 //        mediaRecorder.setAudioEncodingBitRate(192000);
+        TextView hint = findViewById(R.id.Hint);
         record = findViewById(R.id.record);
+        record.setOnClickListener(unused -> {
+            record.setVisibility(View.INVISIBLE);
+            stop.setVisibility(View.VISIBLE);
+            hint.setText("Recording...");
+//        try {
+//            mediaRecorder.prepare();
+//        } catch (IOException e) {
+//
+//        }
+//        mediaRecorder.start();
+        });
+
         search = findViewById(R.id.search);
         search.setVisibility(View.INVISIBLE);
+        search.setOnClickListener(unused -> sendApiAuthorization());
+
         stop = findViewById(R.id.stop);
         stop.setVisibility(View.INVISIBLE);
+        stop.setOnClickListener(unused -> {
+            stop.setVisibility(View.INVISIBLE);
+            delete.setVisibility(View.VISIBLE);
+            search.setVisibility(View.VISIBLE);
+            hint.setText("Successfully recorded! \nPress <Search> to upload your record, or \nPress <Delete> to start over");
+//        mediaRecorder.stop();
+        });
+
         delete = findViewById(R.id.delete);
         delete.setVisibility(View.INVISIBLE);
-        stop.setOnClickListener(unused -> stop());
+        delete.setOnClickListener(unused -> {
+            record.setVisibility(View.VISIBLE);
+            delete.setVisibility(View.INVISIBLE);
+            search.setVisibility(View.INVISIBLE);
+        });
 
-        record.setOnClickListener(unused -> record());
-
-        delete.setOnClickListener(unused -> delete());
-
-        search.setOnClickListener(unused -> search());
         //search.setOnClickListener(unused -> sendApiAuthorization());
     }
 
@@ -107,14 +130,6 @@ public class MainActivity extends AppCompatActivity {
 
         StringRequest auth = new StringRequest(Request.Method.POST, url,
                 response -> {
-
-                    // Display the first 500 characters of the response string.
-                    try {
-                        JSONObject toSend = new JSONObject();
-                        toSend.put("email", "qic7@illinois.edu");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
                 }, error -> {
             A.setText(error.toString());
             result.setText("error auth|");
@@ -126,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
             }*/
             protected Map<String,String> getParams(){
                 Map<String,String> params = new HashMap<>();
-                params.put("access_key",String.valueOf("8b53c894de8426e743a93930d812b9aa"));
+                params.put("access_key","8b53c894de8426e743a93930d812b9aa");
                 return params;
             }
 
@@ -135,28 +150,5 @@ public class MainActivity extends AppCompatActivity {
 // Add the request to the RequestQueue.
         queue.add(auth);
         // https://us-console.acrcloud.com/service/avr
-    }
-    public void record() {
-        stop.setVisibility(View.VISIBLE);
-//        try {
-//            mediaRecorder.prepare();
-//        } catch (IOException e) {
-//
-//        }
-//        mediaRecorder.start();
-    }
-    public void stop() {
-        stop.setVisibility(View.INVISIBLE);
-        delete.setVisibility(View.VISIBLE);
-        search.setVisibility(View.VISIBLE);
-//        mediaRecorder.stop();
-    }
-    public void delete() {
-        delete.setVisibility(View.INVISIBLE);
-        search.setVisibility(View.INVISIBLE);
-        search.setVisibility(View.INVISIBLE);
-    }
-    public void search() {
-
     }
 }
