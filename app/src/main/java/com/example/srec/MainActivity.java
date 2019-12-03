@@ -3,7 +3,6 @@ package com.example.srec;
 import android.os.Bundle;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -19,8 +18,6 @@ import android.widget.TextView;
 import com.android.volley.toolbox.Volley;
 import com.android.volley.RequestQueue;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONException;
@@ -81,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     }*/
     public void sendApiAuthorization () {
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.fullcontact.com/v3/person.enrich";
+        String url ="http://ap-southeast-1.api.acrcloud.com/v1/identify";
         final TextView result = findViewById(R.id.result);
         final TextView A = findViewById(R.id.A);
         // Post information we've already have into the server.
@@ -106,17 +103,8 @@ public class MainActivity extends AppCompatActivity {
                 return headers;
             }
         };
-        StringRequest get = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
-                    result.setText(response);
-                }, error -> {
-            A.setText(error.toString());
-            result.setText("error get|");
-        });
 
 // Add the request to the RequestQueue.
         queue.add(auth);
-        queue.add(get);
     }
 }
