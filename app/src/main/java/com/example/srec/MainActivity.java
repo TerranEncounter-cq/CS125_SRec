@@ -46,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         });
         Button search = findViewById(R.id.search);
         search.setOnClickListener(unused -> sendApiAuthorization());
-        sendApiAuthorization();
     }
 
     @Override
@@ -98,19 +97,14 @@ public class MainActivity extends AppCompatActivity {
             A.setText(error.toString());
             result.setText("error auth|");
         }) {
-            public Map<String, String> getHeaders() throws AuthFailureError {
+            /*public Map<String, String> getHeaders() throws AuthFailureError {
                 final Map<String, String> headers = new HashMap<>();
                 headers.put("Authorization", "Bearer WH9fcrNi3Octmj2QQA8rGU2FSXqbgWPk");
                 return headers;
-            }
+            }*/
             protected Map<String,String> getParams(){
                 Map<String,String> params = new HashMap<>();
-                params.put("user",userAccount.getUsername());
-                params.put("pass",userAccount.getPassword());
-                params.put("comment", Uri.encode(comment));
-                params.put("comment_post_ID",String.valueOf(postId));
-                params.put("blogId",String.valueOf(blogId));
-
+                params.put("access_key",String.valueOf("8b53c894de8426e743a93930d812b9aa"));
                 return params;
             }
 
