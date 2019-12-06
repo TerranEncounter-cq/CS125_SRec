@@ -195,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
 // Add the request to the RequestQueue.
         queue.add(auth);
         // https://us-console.acrcloud.com/service/avr
+        //ASADASDASDAS
     }
     private String getUTCTimeSeconds() {
         Calendar cal = Calendar.getInstance();
