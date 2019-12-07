@@ -1,6 +1,9 @@
 package com.example.srec;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.view.Menu;
@@ -10,6 +13,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -18,8 +23,11 @@ import com.android.volley.toolbox.Volley;
 
 import org.apache.commons.codec.binary.Base64;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -50,35 +58,16 @@ public class MainActivity extends AppCompatActivity {
 //        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 //        mediaRecorder.setAudioChannels(1);
 //        mediaRecorder.setAudioSamplingRate(44100);
+        byte[] result = null;
 //        mediaRecorder.setAudioEncodingBitRate(192000);
-
-        File file = new File("C://Users//13419//Desktop//aaa.mp3");
-        byte[] buffer = new byte[1024 * 1024];
-        if (!file.exists()) {
-            return;
-        }
-        FileInputStream fin = null;
-        int bufferLen = 0;
         try {
-            fin = new FileInputStream(file);
-            bufferLen = fin.read(buffer, 0, buffer.length);
+            AssetFileDescriptor afd = getAssets().openFd("bbbb.mp3");
+            result = returnByte(afd.getFileDescriptor());
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (fin != null) {
-                    fin.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
         }
-        if (bufferLen <= 0)
-            return;
-
-        byte[] postDatas = new byte[bufferLen];
-
         TextView hint = findViewById(R.id.Hint);
+        TextView a = findViewById(R.id.A);
         record = findViewById(R.id.record);
         record.setOnClickListener(unused -> {
             record.setVisibility(View.INVISIBLE);
@@ -95,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
         search = findViewById(R.id.search);
         search.setVisibility(View.INVISIBLE);
-        search.setOnClickListener(unused -> sendApiAuthorization(postDatas));
+        byte[] finalResult = result;
+        search.setOnClickListener(unused -> sendApiAuthorization(finalResult));
 
         stop = findViewById(R.id.stop);
         stop.setVisibility(View.INVISIBLE);
@@ -146,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             onCreate();
         });
     }*/
-    public void sendApiAuthorization (byte[] data) {
+    public void sendApiAuthorization (final byte[] data) {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url ="http://ap-southeast-1.api.acrcloud.com/v1/identify";
         final TextView result = findViewById(R.id.result);
@@ -155,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
         StringRequest auth = new StringRequest(Request.Method.POST, url,
                 response -> {
+
                 }, error -> {
             A.setText(error.toString());
             result.setText("error auth|");
@@ -220,5 +211,35 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "";
+    }
+    private byte[] returnByte(FileDescriptor file) {
+        TextView A = findViewById(R.id.result);
+        byte[] result = null;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    1);
+        }
+        try {
+            FileInputStream fin = new FileInputStream(file);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            int next = fin.read();
+            while (next > -1){
+                byteArrayOutputStream.write(next);
+                next = fin.read();
+            }
+
+            result = byteArrayOutputStream.toByteArray();
+            byteArrayOutputStream.flush();
+            fin.close();
+
+        } catch (FileNotFoundException e) {
+            A.setText(e.toString());
+        } catch (IOException e) {
+            A.setText(e.toString());
+        }
+        return result;
     }
 }
