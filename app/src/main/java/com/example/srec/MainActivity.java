@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,8 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
         byte[] result = null;
 //        mediaRecorder.setAudioEncodingBitRate(192000);
         try {
-            AssetFileDescriptor afd = getAssets().openFd("bbbb.mp3");
-            result = returnByte(afd.getFileDescriptor());
+            InputStream afd = getResources().openRawResource(R.raw.bbbb);
+            result = returnByte(afd);
         } catch (Exception e) {
 
         }
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return "";
     }
-    private byte[] returnByte(FileDescriptor file) {
+    private byte[] returnByte(InputStream file) {
         TextView A = findViewById(R.id.result);
         byte[] result = null;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -225,21 +225,22 @@ public class MainActivity extends AppCompatActivity {
                     1);
         }
         try {
-            FileInputStream fin = new FileInputStream(file);
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            int next = fin.read();
-            while (next > -1){
-                byteArrayOutputStream.write(next);
-                next = fin.read();
+
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            InputStream is = file;
+            byte[] temp = new byte[1024];
+            int read;
+
+            while((read = is.read(temp)) >= 0){
+                buffer.write(temp, 0, read);
             }
 
-            result = byteArrayOutputStream.toByteArray();
-            byteArrayOutputStream.flush();
-            fin.close();
+            byte[] data = buffer.toByteArray();
+            result = data;
+            buffer.flush();
+            is.close();
 
-        } catch (FileNotFoundException e) {
-            A.setText(e.toString());
-        } catch (IOException e) {
+        } catch (Exception e) {
             A.setText(e.toString());
         }
         return result;
