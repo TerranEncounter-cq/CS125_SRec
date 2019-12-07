@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private Button delete;
     private Button search;
 
+    private TextView hint;
     /** MediaRecorder for recording. */
     private MediaRecorder mediaRecorder;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
 
         }
-        TextView hint = findViewById(R.id.Hint);
+        hint = findViewById(R.id.Hint);
         TextView a = findViewById(R.id.A);
         record = findViewById(R.id.record);
         record.setOnClickListener(unused -> {
@@ -145,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
 
         StringRequest auth = new StringRequest(Request.Method.POST, url,
                 response -> {
-
+                    A.setText(response);
+                    hint.setText("successfully connected");
                 }, error -> {
             A.setText(error.toString());
             result.setText("error auth|");
