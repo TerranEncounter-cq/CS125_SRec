@@ -19,10 +19,14 @@ import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.apache.commons.codec.binary.Base64;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -139,15 +143,44 @@ public class MainActivity extends AppCompatActivity {
     }*/
     public void sendApiAuthorization (final byte[] data) {
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://ap-southeast-1.api.acrcloud.com/v1/identify";
+        String url ="http://identify-us-west-2.acrcloud.com/v1/identify";
         final TextView result = findViewById(R.id.result);
         final TextView A = findViewById(R.id.A);
-        // Post information we've already have into the server.
 
-        StringRequest auth = new StringRequest(Request.Method.POST, url,
+        Map<String,String> params = new HashMap<>();
+        String http_method  = "Post";
+        String http_uri = "/v1/identify";
+        String timestamp = getUTCTimeSeconds();
+        String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
+        String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
+        String data_type = "audio";
+        String signature_version = "1";
+        String string_to_sign = http_method + "\n"
+                + http_uri + "\n"
+                + access_key + "\n"
+                + data_type + "\n"
+                + signature_version + "\n"
+                + timestamp;
+        String signature = encryptByHMACSHA1(string_to_sign.getBytes(), access_secret.getBytes());
+        params.put("access_key",access_key);
+        params.put("data_type", "audio");
+        params.put("sample_bytes", data.length + "");
+        params.put("sample", new String(data));
+        params.put("signature_version", signature_version);
+        params.put("signature", signature);
+        params.put("timestamp", timestamp);
+        JSONObject toSend = new JSONObject(params);
+        JsonObjectRequest auth = new JsonObjectRequest(Request.Method.POST, url,toSend,
                 response -> {
-                    A.setText(response);
                     hint.setText("successfully connected");
+                    try {
+                        JSONArray status = response.getJSONArray("status");
+                        //JSONObject msg = status.getJSONObject("msg");
+                        //String msgStr = msg.toString();
+                        //hint.setText(msgStr);
+                    } catch (Exception e) {
+                        A.setText(e.toString());
+                    }
                 }, error -> {
             A.setText(error.toString());
             result.setText("error auth|");
@@ -162,7 +195,8 @@ public class MainActivity extends AppCompatActivity {
                 String http_method  = "Post";
                 String http_uri = "/v1/identify";
                 String timestamp = getUTCTimeSeconds();
-                String access_key = "8b53c894de8426e743a93930d812b9aa";
+                String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
+                String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
                 String data_type = "audio";
                 String signature_version = "1";
                 String string_to_sign = http_method + "\n"
@@ -171,8 +205,8 @@ public class MainActivity extends AppCompatActivity {
                         + data_type + "\n"
                         + signature_version + "\n"
                         + timestamp;
-                String signature = encryptByHMACSHA1(string_to_sign.getBytes(), "PdxqdTupBdTbGM25es9KzZwM0REiyeLZGBZJNOz7".getBytes());
-                params.put("access_key","8b53c894de8426e743a93930d812b9aa");
+                String signature = encryptByHMACSHA1(string_to_sign.getBytes(), access_secret.getBytes());
+                params.put("access_key",access_key);
                 params.put("data_type", "audio");
                 params.put("sample_bytes", data.length + "");
                 params.put("sample", new String(data));
@@ -227,18 +261,15 @@ public class MainActivity extends AppCompatActivity {
         try {
 
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            InputStream is = file;
             byte[] temp = new byte[1024];
             int read;
 
-            while((read = is.read(temp)) >= 0){
+            while((read = file.read(temp)) >= 0){
                 buffer.write(temp, 0, read);
             }
-
-            byte[] data = buffer.toByteArray();
-            result = data;
+            result = buffer.toByteArray();
             buffer.flush();
-            is.close();
+            file.close();
 
         } catch (Exception e) {
             A.setText(e.toString());
