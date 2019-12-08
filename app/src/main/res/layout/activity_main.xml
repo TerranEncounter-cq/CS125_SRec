@@ -9,94 +9,74 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:orientation="horizontal"
+        android:gravity="center"
         tools:layout_editor_absoluteX="80dp"
         tools:layout_editor_absoluteY="-54dp">
+
+        <TextView
+            android:id="@+id/result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nothing"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/A"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nothing1"
+            android:visibility="gone" />
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:orientation="vertical"
-            android:visibility="visible"
-            tools:visibility="visible">
-
+            android:gravity="center">
             <TextView
                 android:id="@+id/Hint"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:id="@+id/exist"
-                android:layout_width="match_parent"
-                android:layout_height="43dp" />
-
+                android:layout_height="wrap_content"
+                android:text="@string/press_record_button_to_start_recording" />
             <LinearLayout
                 android:layout_width="410dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center">
 
                 <Button
                     android:id="@+id/record"
                     android:layout_width="136dp"
                     android:layout_height="84dp"
                     android:layout_gravity="start"
-                    android:text="@string/record"
-                    android:visibility="visible" />
+                    android:text="@string/record" />
 
                 <Button
                     android:id="@+id/stop"
                     android:layout_width="136dp"
                     android:layout_height="84dp"
-                    android:text="@string/stop"
-                    android:visibility="invisible"
-                    tools:visibility="invisible" />
+                    android:text="@string/stop" />
 
                 <Button
                     android:id="@+id/delete"
                     android:layout_width="136dp"
                     android:layout_height="84dp"
-                    android:layout_gravity="end"
                     android:text="@string/delete"
-                    android:visibility="invisible"
-                    tools:visibility="invisible" />
-            </LinearLayout>
+                    android:layout_gravity="end"/>
 
+            </LinearLayout>
             <Button
                 android:id="@+id/search"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:text="@string/search"
-                android:visibility="gone"
-                tools:visibility="gone" />
-
+                android:text="@string/search" />
             <TextView
-                android:id="@+id/A"
-                android:layout_width="247dp"
-                android:layout_height="102dp"
-                android:text="@string/nothing1"
-                android:visibility="visible"
-                tools:visibility="visible" />
-
-            <TextView
-                android:id="@+id/result"
-                android:layout_width="78dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/nothing"
-                android:visibility="visible"
-                tools:visibility="visible" />
-
-            <TextView
-                android:id="@+id/fuck"
-                android:layout_width="match_parent"
-                android:layout_height="77dp"
-                android:text="@string/nothing" />
-
+                android:id="@+id/exist"
+                android:text="exist"/>
 
         </LinearLayout>
-
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
