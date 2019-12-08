@@ -32,26 +32,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-<<<<<<< HEAD
-=======
-import com.android.volley.toolbox.JsonArrayRequest;
->>>>>>> origin/master
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.apache.commons.codec.binary.Base64;
-<<<<<<< HEAD
-=======
-import org.json.JSONArray;
->>>>>>> origin/master
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -165,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-<<<<<<< HEAD
     private String postHttp(String posturl, Map<String, Object> params, int timeOut) {
         String res = "";
         String BOUNDARYSTR = "*****2015.03.30.acrcloud.rec.copyright." + System.currentTimeMillis() + "*****";
@@ -194,87 +184,6 @@ public class MainActivity extends AppCompatActivity {
                     postBufferStream.write((byte[]) value);
                     postBufferStream.write("\r\n".getBytes());
                 }
-=======
-    /*public void onClickListener() {
-        Button search = findViewById(R.id.search);
-        search.setOnClickListener(v -> {
-            onCreate();
-        });
-    }*/
-    public void sendApiAuthorization (final byte[] data) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://identify-us-west-2.acrcloud.com/v1/identify";
-        final TextView result = findViewById(R.id.result);
-        final TextView A = findViewById(R.id.A);
-
-        Map<String,String> params = new HashMap<>();
-        String http_method  = "Post";
-        String http_uri = "/v1/identify";
-        String timestamp = getUTCTimeSeconds();
-        String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
-        String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
-        String data_type = "audio";
-        String signature_version = "1";
-        String string_to_sign = http_method + "\n"
-                + http_uri + "\n"
-                + access_key + "\n"
-                + data_type + "\n"
-                + signature_version + "\n"
-                + timestamp;
-        String signature = encryptByHMACSHA1(string_to_sign.getBytes(), access_secret.getBytes());
-        params.put("access_key",access_key);
-        params.put("data_type", "audio");
-        params.put("sample_bytes", data.length + "");
-        params.put("sample", new String(data));
-        params.put("signature_version", signature_version);
-        params.put("signature", signature);
-        params.put("timestamp", timestamp);
-        JSONObject toSend = new JSONObject(params);
-        JsonObjectRequest auth = new JsonObjectRequest(Request.Method.POST, url,toSend,
-                response -> {
-                    hint.setText("successfully connected");
-                    try {
-                        JSONArray status = response.getJSONArray("status");
-                        //JSONObject msg = status.getJSONObject("msg");
-                        //String msgStr = msg.toString();
-                        //hint.setText(msgStr);
-                    } catch (Exception e) {
-                        A.setText(e.toString());
-                    }
-                }, error -> {
-            A.setText(error.toString());
-            result.setText("error auth|");
-        }) {
-            /*public Map<String, String> getHeaders() throws AuthFailureError {
-                final Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "Bearer WH9fcrNi3Octmj2QQA8rGU2FSXqbgWPk");
-                return headers;
-            }*/
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<>();
-                String http_method  = "Post";
-                String http_uri = "/v1/identify";
-                String timestamp = getUTCTimeSeconds();
-                String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
-                String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
-                String data_type = "audio";
-                String signature_version = "1";
-                String string_to_sign = http_method + "\n"
-                        + http_uri + "\n"
-                        + access_key + "\n"
-                        + data_type + "\n"
-                        + signature_version + "\n"
-                        + timestamp;
-                String signature = encryptByHMACSHA1(string_to_sign.getBytes(), access_secret.getBytes());
-                params.put("access_key",access_key);
-                params.put("data_type", "audio");
-                params.put("sample_bytes", data.length + "");
-                params.put("sample", new String(data));
-                params.put("signature_version", signature_version);
-                params.put("signature", signature);
-                params.put("timestamp", timestamp);
-                return params;
->>>>>>> origin/master
             }
             postBufferStream.write(ENDBOUNDARY.getBytes());
 
@@ -370,11 +279,7 @@ public class MainActivity extends AppCompatActivity {
             byte[] temp = new byte[1024];
             int read;
 
-<<<<<<< HEAD
             while((read = file.read(temp)) >= 0) {
-=======
-            while((read = file.read(temp)) >= 0){
->>>>>>> origin/master
                 buffer.write(temp, 0, read);
             }
             result = buffer.toByteArray();
