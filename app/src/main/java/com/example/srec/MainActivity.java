@@ -1,10 +1,29 @@
 package com.example.srec;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+// import commons-codec-<version>.jar, download from http://commons.apache.org/proper/commons-codec/download_codec.cgi
+import org.apache.commons.codec.binary.Base64;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
@@ -13,16 +32,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.apache.commons.codec.binary.Base64;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -59,13 +81,13 @@ public class MainActivity extends AppCompatActivity {
 //        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 //        mediaRecorder.setAudioChannels(1);
 //        mediaRecorder.setAudioSamplingRate(44100);
+
         byte[] result = null;
 //        mediaRecorder.setAudioEncodingBitRate(192000);
         try {
-            InputStream afd = getResources().openRawResource(R.raw.bbbb);
+            InputStream afd = getResources().openRawResource(R.raw.abc);
             result = returnByte(afd);
         } catch (Exception e) {
-
         }
         hint = findViewById(R.id.Hint);
         TextView a = findViewById(R.id.A);
@@ -86,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         search = findViewById(R.id.search);
         search.setVisibility(View.INVISIBLE);
         byte[] finalResult = result;
-        search.setOnClickListener(unused -> sendApiAuthorization(finalResult));
+        //search.setOnClickListener(unused -> sendApiAuthorization(finalResult));
 
         stop = findViewById(R.id.stop);
         stop.setVisibility(View.INVISIBLE);
@@ -105,6 +127,10 @@ public class MainActivity extends AppCompatActivity {
             delete.setVisibility(View.INVISIBLE);
             search.setVisibility(View.INVISIBLE);
         });
+
+        String get = recognize("identify-us-west-2.acrcloud.com", "67a29ee156d0b704020ad60f076963cf",
+                "OVIADsqufEwNnD8LZHqlNd0ycYUx1Sr6WnwitiwE", result, "audio", 10000);
+        a.setText(get);
 
         //search.setOnClickListener(unused -> sendApiAuthorization());
     }
@@ -131,65 +157,90 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /*public void onClickListener() {
-        Button search = findViewById(R.id.search);
-        search.setOnClickListener(v -> {
-            onCreate();
-        });
-    }*/
-    public void sendApiAuthorization (final byte[] data) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://ap-southeast-1.api.acrcloud.com/v1/identify";
-        final TextView result = findViewById(R.id.result);
-        final TextView A = findViewById(R.id.A);
-        // Post information we've already have into the server.
+    private String postHttp(String posturl, Map<String, Object> params, int timeOut) {
+        String res = "";
+        String BOUNDARYSTR = "*****2015.03.30.acrcloud.rec.copyright." + System.currentTimeMillis() + "*****";
+        String BOUNDARY = "--" + BOUNDARYSTR + "\r\n";
+        String ENDBOUNDARY = "--" + BOUNDARYSTR + "--\r\n\r\n";
 
-        StringRequest auth = new StringRequest(Request.Method.POST, url,
-                response -> {
-                    A.setText(response);
-                    hint.setText("successfully connected");
-                }, error -> {
-            A.setText(error.toString());
-            result.setText("error auth|");
-        }) {
-            /*public Map<String, String> getHeaders() throws AuthFailureError {
-                final Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "Bearer WH9fcrNi3Octmj2QQA8rGU2FSXqbgWPk");
-                return headers;
-            }*/
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<>();
-                String http_method  = "Post";
-                String http_uri = "/v1/identify";
-                String timestamp = getUTCTimeSeconds();
-                String access_key = "8b53c894de8426e743a93930d812b9aa";
-                String data_type = "audio";
-                String signature_version = "1";
-                String string_to_sign = http_method + "\n"
-                        + http_uri + "\n"
-                        + access_key + "\n"
-                        + data_type + "\n"
-                        + signature_version + "\n"
-                        + timestamp;
-                String signature = encryptByHMACSHA1(string_to_sign.getBytes(), "PdxqdTupBdTbGM25es9KzZwM0REiyeLZGBZJNOz7".getBytes());
-                params.put("access_key","8b53c894de8426e743a93930d812b9aa");
-                params.put("data_type", "audio");
-                params.put("sample_bytes", data.length + "");
-                params.put("sample", new String(data));
-                params.put("signature_version", signature_version);
-                params.put("signature", signature);
-                params.put("timestamp", timestamp);
-                return params;
+        String stringKeyHeader = BOUNDARY +
+                "Content-Disposition: form-data; name=\"%s\"" +
+                "\r\n\r\n%s\r\n";
+        String filePartHeader = BOUNDARY +
+                "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n" +
+                "Content-Type: application/octet-stream\r\n\r\n";
+
+        URL url = null;
+        HttpURLConnection conn = null;
+        BufferedOutputStream out = null;
+        BufferedReader reader = null;
+        ByteArrayOutputStream postBufferStream = new ByteArrayOutputStream();
+        try {
+            for (String key : params.keySet()) {
+                Object value = params.get(key);
+                if (value instanceof String || value instanceof Integer) {
+                    postBufferStream.write(String.format(stringKeyHeader, key, (String)value).getBytes());
+                } else if (value instanceof byte[]) {
+                    postBufferStream.write(String.format(filePartHeader, key, key).getBytes());
+                    postBufferStream.write((byte[]) value);
+                    postBufferStream.write("\r\n".getBytes());
+                }
             }
+            postBufferStream.write(ENDBOUNDARY.getBytes());
 
-        };
+            url = new URL(posturl);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(timeOut);
+            conn.setReadTimeout(timeOut);
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestProperty("Accept-Charset", "utf-8");
+            conn.setRequestProperty("Content-type", "multipart/form-data;boundary=" + BOUNDARYSTR);
 
+            conn.connect();
+            out = new BufferedOutputStream(conn.getOutputStream());
+            out.write(postBufferStream.toByteArray());
+            out.flush();
+            int response = conn.getResponseCode();
+            if (response == HttpURLConnection.HTTP_OK) {
+                reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                String tmpRes = "";
+                while ((tmpRes = reader.readLine()) != null) {
+                    if (tmpRes.length() > 0)
+                        res = res + tmpRes;
+                }
+            }
+        } catch (Exception e) {
+            hint.setText(e.toString());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (postBufferStream != null) {
+                    postBufferStream.close();
+                    postBufferStream = null;
+                }
+                if (out != null) {
+                    out.close();
+                    out = null;
+                }
+                if (reader != null) {
+                    reader.close();
+                    reader = null;
+                }
+                if (conn != null) {
+                    conn.disconnect();
+                    conn = null;
+                }
+            } catch (IOException e) {
+                hint.setText("Error found");
+                e.printStackTrace();
+            }
+        }
+        return res;
 
-// Add the request to the RequestQueue.
-        queue.add(auth);
-        // https://us-console.acrcloud.com/service/avr
-        //ASADASDASDAS
     }
+
     private String getUTCTimeSeconds() {
         Calendar cal = Calendar.getInstance();
         int zoneOffset = cal.get(Calendar.ZONE_OFFSET);
@@ -225,24 +276,71 @@ public class MainActivity extends AppCompatActivity {
                     1);
         }
         try {
-
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            InputStream is = file;
             byte[] temp = new byte[1024];
             int read;
 
-            while((read = is.read(temp)) >= 0){
+            while((read = file.read(temp)) >= 0) {
                 buffer.write(temp, 0, read);
             }
-
-            byte[] data = buffer.toByteArray();
-            result = data;
+            result = buffer.toByteArray();
             buffer.flush();
-            is.close();
+            file.close();
 
         } catch (Exception e) {
             A.setText(e.toString());
         }
+        System.out.println(result.toString());
         return result;
+    }
+
+    /*protected Map<String,String> getParams(){
+        Map<String,String> params = new HashMap<>();
+        String http_method  = "Post";
+        String http_uri = "/v1/identify";
+        String timestamp = getUTCTimeSeconds();
+        String access_key = "8b53c894de8426e743a93930d812b9aa";
+        String data_type = "audio";
+        String signature_version = "1";
+        String string_to_sign = http_method + "\n"
+                + http_uri + "\n"
+                + access_key + "\n"
+                + data_type + "\n"
+                + signature_version + "\n"
+                + timestamp;
+        String signature = encryptByHMACSHA1(string_to_sign.getBytes(), "PdxqdTupBdTbGM25es9KzZwM0REiyeLZGBZJNOz7".getBytes());
+        params.put("access_key","8b53c894de8426e743a93930d812b9aa");
+        params.put("data_type", "audio");
+        params.put("sample_bytes", .length + "");
+        params.put("sample", new String(data));
+        params.put("signature_version", signature_version);
+        params.put("signature", signature);
+        params.put("timestamp", timestamp);
+        return params;
+    }*/
+    public String recognize(String host, String accessKey, String secretKey, byte[] queryData, String queryType, int timeout) {
+        String method = "POST";
+        String httpURL = "/v1/identify";
+        String dataType = queryType;
+        String sigVersion = "1";
+        String timestamp = getUTCTimeSeconds();
+
+        String reqURL = "http://" + host + httpURL;
+
+        String sigStr = method + "\n" + httpURL + "\n" + accessKey + "\n" + dataType + "\n" + sigVersion + "\n" + timestamp;
+        String signature = encryptByHMACSHA1(sigStr.getBytes(), secretKey.getBytes());
+
+        Map<String, Object> postParams = new HashMap<String, Object>();
+        postParams.put("access_key", accessKey);
+        postParams.put("sample_bytes", queryData.length + "");
+        postParams.put("sample", queryData);
+        postParams.put("timestamp", timestamp);
+        postParams.put("signature", signature);
+        postParams.put("data_type", dataType);
+        postParams.put("signature_version", sigVersion);
+
+        String res = postHttp(reqURL, postParams, timeout);
+
+        return res;
     }
 }
