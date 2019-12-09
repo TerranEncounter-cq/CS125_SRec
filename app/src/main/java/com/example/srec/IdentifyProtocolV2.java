@@ -136,41 +136,4 @@ public class IdentifyProtocolV2 {
 
         return res;
     }
-
-    public static void main(String[] args) {
-        File file = new File("E://sample.wav");
-        byte[] buffer = new byte[1024 * 1024];
-        if (!file.exists()) {
-            return;
-        }
-        FileInputStream fin = null;
-        int bufferLen = 0;
-        try {
-            fin = new FileInputStream(file);
-            bufferLen = fin.read(buffer, 0, buffer.length);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (fin != null) {
-                    fin.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("bufferLen=" + bufferLen);
-
-        if (bufferLen <= 0)
-            return;
-
-        byte[] postDatas = new byte[bufferLen];
-        System.arraycopy(buffer, 0, postDatas, 0, bufferLen);
-        IdentifyProtocolV2 a = new IdentifyProtocolV2();
-        // Replace "###...###" below with your project's host access_key and access_secret.
-        // public String recognize(String host, String accessKey, String secretKey, byte[] queryData, String queryType, int timeout)
-        String result = a.recognize("###YOUR_HOST###", "###YOUR_ACCESS_KEY###", "###YOUR_ACCESS_SECRET###", postDatas, "audio", 10000);
-        System.out.println(result);
-    }
-
 }
