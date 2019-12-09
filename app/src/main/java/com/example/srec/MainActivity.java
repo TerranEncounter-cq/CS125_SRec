@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,25 +17,15 @@ import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.request.GsonRequest;
-import com.android.volley.request.JsonObjectRequest;
+import com.android.volley.error.AuthFailureError;
+import com.android.volley.request.MultiPartRequest;
 import com.android.volley.request.SimpleMultiPartRequest;
-import com.android.volley.request.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.apache.commons.codec.binary.Base64;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             InputStream afd = getResources().openRawResource(R.raw.abc);
             result = returnByte(afd);
         } catch (Exception e) {
+            hint.setText(e.toString());
         }
         hint = findViewById(R.id.Hint);
 
@@ -132,6 +122,12 @@ public class MainActivity extends AppCompatActivity {
         String BOUNDARYSTR = "*****2015.03.30.acrcloud.rec.copyright." + System.currentTimeMillis() + "*****";
         String BOUNDARY = "--" + BOUNDARYSTR + "\r\n";
         String ENDBOUNDARY = "--" + BOUNDARYSTR + "--\r\n\r\n";
+        String stringKeyHeader = BOUNDARY +
+                "Content-Disposition: form-data; name=\"%s\"" +
+                "\r\n\r\n%s\r\n";
+        String filePartHeader = BOUNDARY +
+                "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n" +
+                "Content-Type: application/octet-stream\r\n\r\n";
         Map<String,String> params = new HashMap<>();
         String http_method  = "Post";
         String http_uri = "/v1/identify";
@@ -148,24 +144,47 @@ public class MainActivity extends AppCompatActivity {
                 + timestamp;
         String signature = encryptByHMACSHA1(string_to_sign.getBytes(), access_secret.getBytes());
         params.put("access_key", access_key);
-        params.put("data_type", "audio");
+        params.put("data_type", data_type);
         params.put("sample_bytes", data.length + "");
         params.put("sample", new String(data));
         params.put("signature_version", signature_version);
         params.put("signature", signature);
         params.put("timestamp", timestamp);
-        JSONObject param = new JSONObject(params);
-        JsonObjectRequest auth = new JsonObjectRequest(Request.Method.POST, url, param,
+        ByteArrayOutputStream postBufferStream = new ByteArrayOutputStream();
+        try {
+            for (String key : params.keySet()) {
+                Object value = params.get(key);
+                if (value instanceof String || value instanceof Integer) {
+                    postBufferStream.write(String.format(stringKeyHeader, key, (String) value).getBytes());
+                } else if (value instanceof byte[]) {
+                    postBufferStream.write(String.format(filePartHeader, key, key).getBytes());
+                    postBufferStream.write((byte[]) value);
+                    postBufferStream.write("\r\n".getBytes());
+                }
+            }
+            postBufferStream.write(ENDBOUNDARY.getBytes());
+        } catch (Exception e) {
+            hint.setText(e.toString());
+        }
+        byte[] bytesObject = postBufferStream.toByteArray();
+        MultiPartRequest auth = new SimpleMultiPartRequest(Request.Method.POST, url,
                 response -> {
-                    // Display the first 500 characters of the response string.
-                    hint.setText(response.toString());
+                    hint.setText(response);
                 }, error -> {
             //a.setText(error.toString());
             result.setText(error.toString());
         }) {
-            public String getBodyContentType()
-            {
+            public byte[] getBody() throws AuthFailureError {
+                return bytesObject;
+            }
+            public String getBodyContentType() {
                 return "multipart/form-data; boundary=" + BOUNDARYSTR + "; charset=utf-8";
+            }
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<>();
+                params.put("Accept-Charset", "utf-8");
+                params.put("Content-type", "multipart/form-data;boundary=" + BOUNDARYSTR);
+                return params;
             }
         };
         queue.add(auth);
@@ -232,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
             byte[] temp = new byte[1024];
             int read;
 
-            while((read = file.read(temp)) >= 0) {
+            while ((read = file.read(temp)) >= 0) {
                 buffer.write(temp, 0, read);
             }
             result = buffer.toByteArray();
