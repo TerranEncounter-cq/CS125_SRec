@@ -4,9 +4,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,23 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.error.AuthFailureError;
-import com.android.volley.request.MultiPartRequest;
-import com.android.volley.request.SimpleMultiPartRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 // import commons-codec-<version>.jar, download from http://commons.apache.org/proper/commons-codec/download_codec.cgi
 
@@ -46,6 +30,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView a;
     private TextView result;
     private TextView exist;
+    private IdentifyProtocolV2 protocolV2;
+    private String access_key;
+    private String access_secret;
+    private String host;
+    private byte[] finalResultByteA;
     /** MediaRecorder for recording. */
     private MediaRecorder mediaRecorder;
 
@@ -76,10 +65,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             hint.setText(e.toString());
         }
-        IdentifyProtocolV2 a = new IdentifyProtocolV2();
-        String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
-        String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
-        String host = "identify-us-west-2.acrcloud.com";
+        protocolV2 = new IdentifyProtocolV2();
+        access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
+        access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
+        host = "identify-us-west-2.acrcloud.com";
         record = findViewById(R.id.record);
         record.setOnClickListener(unused -> {
             record.setVisibility(View.INVISIBLE);
@@ -97,12 +86,9 @@ public class MainActivity extends AppCompatActivity {
         search = findViewById(R.id.search);
         search.setVisibility(View.INVISIBLE);
 //        byte[] finalResult = result;
-        byte[] finalResultByteA = resultByteA;
+        finalResultByteA = resultByteA;
         search.setOnClickListener(unused -> {
-            String toShow = a.recognize(host,
-                access_key,
-                access_secret, finalResultByteA, "audio", 10000);
-            hint.setText(toShow);
+            new DownloadFilesTask().execute();
         }
         );
 
@@ -125,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         });
         //search.setOnClickListener(unused -> sendApiAuthorization());
     }
+
     /*private void sendApiAuthorization(byte[] data) {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://identify-us-west-2.acrcloud.com/v1/identify";
@@ -246,6 +233,17 @@ public class MainActivity extends AppCompatActivity {
         }
         return "";
     }*/
+    private class DownloadFilesTask extends AsyncTask<String, Void, String> {
+        protected String doInBackground(String... url) {
+            String toReturn= protocolV2.recognize(host,
+                    access_key,
+                    access_secret, finalResultByteA, "audio", 10000);
+            return toReturn;
+        }
+        protected void onPostExecute(String result) {
+            hint.setText(result);
+        }
+    }
     private byte[] returnByte(InputStream file) {
         byte[] result = null;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
