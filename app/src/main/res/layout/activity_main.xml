@@ -7,10 +7,11 @@
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
         android:gravity="center"
+        android:orientation="horizontal"
         tools:layout_editor_absoluteX="80dp"
         tools:layout_editor_absoluteY="-54dp">
 
@@ -28,55 +29,53 @@
             android:text="@string/nothing1"
             android:visibility="gone" />
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center">
-            <TextView
-                android:id="@+id/Hint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/press_record_button_to_start_recording" />
+            android:gravity="center_horizontal|top"
+            android:orientation="vertical">
+
             <LinearLayout
                 android:layout_width="410dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
+                android:gravity="center"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/record"
-                    android:layout_width="136dp"
-                    android:layout_height="84dp"
-                    android:layout_gravity="start"
-                    android:text="@string/record" />
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:text="start Recording" />
 
                 <Button
                     android:id="@+id/stop"
-                    android:layout_width="136dp"
+                    android:layout_width="150dp"
                     android:layout_height="84dp"
-                    android:text="@string/stop" />
-
-                <Button
-                    android:id="@+id/delete"
-                    android:layout_width="136dp"
-                    android:layout_height="84dp"
-                    android:text="@string/delete"
-                    android:layout_gravity="end"/>
+                    android:text="Stop Recording" />
 
             </LinearLayout>
+
+            <Button
+                android:id="@+id/delete"
+                android:layout_width="170dp"
+                android:layout_height="90dp"
+                android:text="Delete and start again" />
+
             <Button
                 android:id="@+id/search"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="@string/search" />
+                android:layout_height="87dp"
+                android:text="Start Searching" />
+
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/exist"
-                android:text="exist"/>
+                android:id="@+id/content"
+                android:layout_width="match_parent"
+                android:layout_height="403dp"
+                android:text="@string/press_record_button_to_start_recording" />
 
         </LinearLayout>
+
+
     </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
