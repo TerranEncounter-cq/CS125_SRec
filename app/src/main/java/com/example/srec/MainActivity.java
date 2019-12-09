@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         exist = findViewById(R.id.exist);
         result = findViewById(R.id.result);
         exist = findViewById(R.id.exist);
+        hint = findViewById(R.id.Hint);
 
 //        mediaRecorder = new MediaRecorder();
 //        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_2_TS);
@@ -67,22 +68,23 @@ public class MainActivity extends AppCompatActivity {
 //        mediaRecorder.setAudioChannels(1);
 //        mediaRecorder.setAudioSamplingRate(44100);
 
-        byte[] result = null;
+        byte[] resultByteA = null;
 //        mediaRecorder.setAudioEncodingBitRate(192000);
         try {
             InputStream afd = getResources().openRawResource(R.raw.abc);
-            result = returnByte(afd);
+            resultByteA = returnByte(afd);
         } catch (Exception e) {
             hint.setText(e.toString());
         }
-        hint = findViewById(R.id.Hint);
-
+        IdentifyProtocolV2 a = new IdentifyProtocolV2();
+        String access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
+        String access_secret = "7fDCGZrza67GnIlIuxebhW86hN6lqd6gfo96PfXr";
+        String host = "identify-us-west-2.acrcloud.com";
         record = findViewById(R.id.record);
         record.setOnClickListener(unused -> {
             record.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
             hint.setText("Recording...");
-
 //        try {
 //            mediaRecorder.prepare();
 //        } catch (IOException e) {
@@ -94,8 +96,15 @@ public class MainActivity extends AppCompatActivity {
 
         search = findViewById(R.id.search);
         search.setVisibility(View.INVISIBLE);
-        byte[] finalResult = result;
-        search.setOnClickListener(unused -> sendApiAuthorization(finalResult));
+//        byte[] finalResult = result;
+        byte[] finalResultByteA = resultByteA;
+        search.setOnClickListener(unused -> {
+            String toShow = a.recognize(host,
+                access_key,
+                access_secret, finalResultByteA, "audio", 10000);
+            hint.setText(toShow);
+        }
+        );
 
         stop = findViewById(R.id.stop);
         stop.setVisibility(View.INVISIBLE);
@@ -116,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         });
         //search.setOnClickListener(unused -> sendApiAuthorization());
     }
-    private void sendApiAuthorization(byte[] data) {
+    /*private void sendApiAuthorization(byte[] data) {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://identify-us-west-2.acrcloud.com/v1/identify";
         String BOUNDARYSTR = "*****2015.03.30.acrcloud.rec.copyright." + System.currentTimeMillis() + "*****";
@@ -236,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "";
-    }
+    }*/
     private byte[] returnByte(InputStream file) {
         byte[] result = null;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
