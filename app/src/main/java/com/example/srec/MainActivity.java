@@ -197,11 +197,11 @@ public class MainActivity extends AppCompatActivity {
                     .getJSONObject(0)
                     .getJSONObject("album")
                     .getString("name");
-            String overal = " Title: " + title + "\n" + " Artists Name" + playerName + "\n" + " Release Date: "
+            String overal = " Title: " + title + "\n" + " Artists Name: " + playerName + "\n" + " Release Date: "
                     + date + "\n" + " Company Label: " + label + "\n" + " Album Name: " + albumName;
             hint.setText(overal);
         } catch(JSONException e) {
-            hint.setText(e.toString());
+            hint.setText("emmm.. did not match correct song for you. Sry.");
         }
     }
 
