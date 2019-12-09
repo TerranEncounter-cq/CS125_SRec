@@ -13,6 +13,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView hint;
     private TextView a;
     private TextView result;
-    private TextView exist;
     private IdentifyProtocolV2 protocolV2;
     private String access_key;
     private String access_secret;
@@ -44,10 +46,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         a = findViewById(R.id.A);
-        exist = findViewById(R.id.exist);
         result = findViewById(R.id.result);
-        exist = findViewById(R.id.exist);
-        hint = findViewById(R.id.Hint);
+        hint = findViewById(R.id.content);
         i = 0;
         protocolV2 = new IdentifyProtocolV2();
         access_key = "f16580f1a90ba50fc8404e4b3b6c09c2";
@@ -56,13 +56,13 @@ public class MainActivity extends AppCompatActivity {
         record = findViewById(R.id.record);
         record.setOnClickListener(unused -> {
             startRecording();
-            record.setVisibility(View.INVISIBLE);
+            record.setVisibility(View.GONE);
             stop.setVisibility(View.VISIBLE);
             hint.setText("Recording...");
         });
 
         stop = findViewById(R.id.stop);
-        stop.setVisibility(View.INVISIBLE);
+        stop.setVisibility(View.GONE);
         stop.setOnClickListener(unused -> {
             stopRecording();
             if (recorderFile == null) {
@@ -70,28 +70,32 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 finalResultByteA = returnByte(recorderFile);
             }
-            stop.setVisibility(View.INVISIBLE);
+            stop.setVisibility(View.GONE);
             delete.setVisibility(View.VISIBLE);
             search.setVisibility(View.VISIBLE);
             hint.setText("Successfully recorded! \nPress <Search> to upload your record, or \nPress <Delete> to start over");
         });
 
         search = findViewById(R.id.search);
-        search.setVisibility(View.INVISIBLE);
+        search.setVisibility(View.GONE);
+
         finalResultByteA = resultByteA;
         search.setOnClickListener(unused -> {
             new DownloadFilesTask().execute();
+            search.setVisibility(View.GONE);
+            delete.setVisibility(View.GONE);
+            record.setVisibility(View.VISIBLE);
         }
         );
 
         delete = findViewById(R.id.delete);
-        delete.setVisibility(View.INVISIBLE);
+        delete.setVisibility(View.GONE);
         delete.setOnClickListener(unused -> {
             deleteRecord();
             hint.setText("Start over.");
             record.setVisibility(View.VISIBLE);
-            delete.setVisibility(View.INVISIBLE);
-            search.setVisibility(View.INVISIBLE);
+            delete.setVisibility(View.GONE);
+            search.setVisibility(View.GONE);
         });
     }
 
@@ -103,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
             return toReturn;
         }
         protected void onPostExecute(String result) {
-            hint.setText(result);
+            getResult(result);
         }
     }
     private byte[] returnByte(File file) {
@@ -118,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
         byte[] result = null;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     1);
@@ -154,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mediaRecorder.setOutputFile(this.getFilesDir().getAbsolutePath() + "/mic.aac");
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mediaRecorder.setMaxDuration(15000);
+        mediaRecorder.setMaxFileSize(120000);
         mediaRecorder.setAudioSamplingRate(16000);
         recorderFile = getRecorderFile();
         recorderFile.getParentFile().mkdirs();
@@ -166,6 +171,40 @@ public class MainActivity extends AppCompatActivity {
             hint.setText(e.toString());
         }
     }
+    public void getResult(String info) {
+        try {
+            JSONObject obj = new JSONObject(info);
+            String resultType = obj.getString("status");
+            String date = obj.getJSONObject("metadata")
+                    .getJSONArray("music")
+                    .getJSONObject(0)
+                    .getString("release_date");
+            String playerName = obj.getJSONObject("metadata")
+                    .getJSONArray("music")
+                    .getJSONObject(0)
+                    .getJSONArray("artists")
+                    .getJSONObject(0).getString("name");
+            String label = obj.getJSONObject("metadata")
+                    .getJSONArray("music")
+                    .getJSONObject(0)
+                    .getString("label");
+            String title = obj.getJSONObject("metadata")
+                    .getJSONArray("music")
+                    .getJSONObject(0)
+                    .getString("title");
+            String albumName = obj.getJSONObject("metadata")
+                    .getJSONArray("music")
+                    .getJSONObject(0)
+                    .getJSONObject("album")
+                    .getString("name");
+            String overal = " Title: " + title + "\n" + " Artists Name" + playerName + "\n" + " Release Date: "
+                    + date + "\n" + " Company Label: " + label + "\n" + " Album Name: " + albumName;
+            hint.setText(overal);
+        } catch(JSONException e) {
+            hint.setText(e.toString());
+        }
+    }
+
     private File getRecorderFile() {
         i++;
         return new File(this.getFilesDir().getAbsolutePath(),

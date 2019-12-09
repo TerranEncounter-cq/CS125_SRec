@@ -1,9 +1,9 @@
 package com.example.srec;
 
 
+import org.apache.commons.codec.binary.Base64;
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -14,11 +14,9 @@ import java.net.URLEncoder;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-
-// import commons-codec-<version>.jar, download from http://commons.apache.org/proper/commons-codec/download_codec.cgi
-import org.apache.commons.codec.binary.Base64;
 
 public class IdentifyProtocolV2 {
 
